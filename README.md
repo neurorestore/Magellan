@@ -121,7 +121,7 @@ To see Magellan in action, load the simulated spatial transcriptomics dataset th
 
 This toy dataset consists of 300 spatial barcodes, distributed approximately evenly across a two-dimensional tissue in a grid-like pattern, with 150 barcodes sampled from each of two biological conditions. The tissue consists of two regions, one on the top and one on the bottom, that are undergoing distinct responses to a biological perturbation. Specifically, the top region is undergoing a more profound transcriptional response to the perturbation of interest.
 
-![Simulation ground truth](https://raw.githubusercontent.com/neurorestore/Magellan/master/fig/toy-ground-truth.png)
+![Simulation ground truth](https://raw.githubusercontent.com/neurorestore/Magellan/main/fig/toy-ground-truth.png)
 
 We can run Magellan on this dataset, which is provided as a Seurat object, using the following code. This should take about 30 minutes. Note that for the sake of runtime, here we use only 5 iterations of cross-validation per barcode. This leads to an increased amount of noise in the results (which would be mitigated by using the default setting of 50 iterations), at the cost of an increased runtime. Please also note that by default, Magellan will run on 32 threads; decrease this number by specifying the `n_threads` argument to `navigate_space`.
 
@@ -131,6 +131,6 @@ We can run Magellan on this dataset, which is provided as a Seurat object, using
 
 We can inspect the spatial prioritization by extracting the AUCs for each barcode and overlaying them onto the two-dimensional coordinates of the image:
 
-![Simulation results](https://raw.githubusercontent.com/skinnider/Magellan/master/fig/toy-magellan.png)
+![Simulation results](https://raw.githubusercontent.com/skinnider/Magellan/main/fig/toy-magellan.png)
 
 Magellan has correctly recovered the simulated spatial pattern of perturbation responsiveness.
