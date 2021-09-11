@@ -131,6 +131,6 @@ We can run Magellan on this dataset, which is provided as a Seurat object, using
 
 We can inspect the spatial prioritization by extracting the AUCs for each barcode and overlaying them onto the two-dimensional coordinates of the image:
 
-![Simulation results](https://raw.githubusercontent.com/skinnider/Magellan/main/fig/toy-magellan.png)
+![Simulation results](https://raw.githubusercontent.com/neurorestore/Magellan/main/fig/toy-magellan.png)
 
 Magellan has correctly recovered the simulated spatial pattern of perturbation responsiveness.
