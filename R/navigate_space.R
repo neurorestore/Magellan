@@ -128,6 +128,7 @@ navigate_space = function(input,
                           coords = NULL,
                           k = 50,
                           label_col = "label",
+                          coords_3D = FALSE,  
                           coord_cols = c("coord_x", "coord_y"),
                           n_subsamples = 50,
                           subsample_size = 20,
@@ -163,6 +164,13 @@ navigate_space = function(input,
     stop("install \"glmnet\" R package to run Augur with logistic regression ",
          "classifier", call. = FALSE)
   }
+
+  if (coords_3D == TRUE){
+    coord_cols = c(coord_cols, 'coord_z')
+    message('Using 3D coordinates, please make sure that image data contains the following 3 columns: imagerow, imagecol and imagedepth')
+  } else {
+    message('Using 2D coordinates, please make sure that image data contains the following 2 columns:, imagerow and imagecol')
+  }
   
   # extract cell types and label from metadata
   if ("Seurat" %in% class(input)) {
@@ -176,15 +184,25 @@ navigate_space = function(input,
       droplevels()
     labels = meta[[label_col]]
     expr = Seurat::GetAssayData(input)
-    coords = input@images$slice1@coordinates %>%
+    if (coords_3D == TRUE){
+      coords = input@images$slice1@coordinates %>%
+      dplyr::rename(coord_x = imagecol, coord_y = imagerow, coord_z= imagedepth) %>%
+      dplyr::select(coord_x, coord_y, coord_z) %>%
+      # we need to group by here
+      mutate(label = labels,
+             barcode = colnames(input),
+             idx = row_number())
+    # print default assay
+    } else {
+      coords = input@images$slice1@coordinates %>%
       dplyr::rename(coord_x = imagecol, coord_y = imagerow) %>%
       dplyr::select(coord_x, coord_y) %>%
       # we need to group by here
       mutate(label = labels,
              barcode = colnames(input),
              idx = row_number())
-    
     # print default assay
+    }
     default_assay = Seurat::DefaultAssay(input)
     message("using default assay: ", default_assay, " ...")
   } else {
@@ -211,8 +229,9 @@ navigate_space = function(input,
       stop("must provide coordinate information if not supplying a Seurat object")
     }
     if (any(!coord_cols %in% colnames(coords))) {
-      stop("coords must have x and y columns. Please check.")
+      stop("coords must have at least x and y columns if 2D and an additional z column if 3D. Please check.")
     }
+
     coords %<>%
       # we need to group by here
       mutate(label = labels,
