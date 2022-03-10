@@ -164,20 +164,19 @@ navigate_space = function(input,
          "classifier", call. = FALSE)
   }
 
-  if (len(coord_cols)==3){
+  if (length(coord_cols)==3){
     coords_type = '3D'
     message('Using 3D coordinates')
-  } else if (len(coord_cols)==2) {
+  } else if (length(coord_cols)==2) {
     coords_type = '2D'
     message('Using 2D coordinates')
   } else {
     stop('Please ensure that the coord_cols parameter contains 2 or 3 elements')
   }
-
-  if (!all(coord_cols %in% colnames(input@images$slice1@coordinates))){
-    stop('Please ensure that the input@images$slice1@coordinates or the given coords contain the columns specified in coord_cols')
+  if (((is.null(coords) & !all(coord_cols %in% colnames(input@images$slice1@coordinates))) | 
+    (!is.null(coords) & !all(coord_cols %in% colnames(coords))))) {
+    stop('Please ensure that the input@images$slice1@coordinates or the given coords parameter contain the columns specified in coord_cols parameter')
   }
-
   # extract cell types and label from metadata
   if ("Seurat" %in% class(input)) {
     # confirm Seurat is installed
@@ -221,9 +220,6 @@ navigate_space = function(input,
     # get coordinates
     if (is.null(coords)) {
       stop("must provide coordinate information if not supplying a Seurat object")
-    }
-    if (any(!coord_cols %in% colnames(coords))) {
-      stop("coords must have at least x and y columns if 2D and an additional z column if 3D. Please check.")
     }
 
     coords %<>%
