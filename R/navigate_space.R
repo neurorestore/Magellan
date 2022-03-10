@@ -16,6 +16,10 @@
 #' @param input a matrix, data frame, or \code{Seurat} object containing 
 #'   gene expression values (genes in rows, cells in columns) and, 
 #'   optionally, metadata about each spatial barcode
+#' @param coord_cols the names of the columns in the \code{coords} data frame, 
+#'   or the metadata container in the \code{Seurat} object, that contain the 
+#'   coordinates of each spatial barcode in the gene-by-barcode expression 
+#'   matrix
 #' @param meta optionally, a data frame containing metadata about the
 #'   \code{input} gene-by-barcode matrix, at minimum containing the label 
 #'   associated with each barcode
@@ -30,10 +34,6 @@
 #'   metadata container in the \code{Seurat} object, that
 #'   contains condition labels (e.g., disease, timepoint) for each barcode in the
 #'   gene-by-barcode expression matrix; defaults to \code{"label"}
-#' @param coord_cols the names of the columns in the \code{coords} data frame, 
-#'   or the metadata container in the \code{Seurat} object, that contain the 
-#'   coordinates of each spatial barcode in the gene-by-barcode expression 
-#'   matrix; defaults to \code{c("coord_x", "coord_y")}
 #' @param n_subsamples the number of times to repeat the cross-validation 
 #'   procedure for each barcode; defaults to \code{50}.
 #'   Set to \code{0} to omit subsampling altogether,
@@ -124,12 +124,11 @@
 #'
 #' @export
 navigate_space = function(input,
+                          coord_cols,
                           meta = NULL,
                           coords = NULL,
                           k = 50,
-                          label_col = "label",
-                          coords_3D = FALSE,  
-                          coord_cols = c("coord_x", "coord_y"),
+                          label_col = "label",  
                           n_subsamples = 50,
                           subsample_size = 20,
                           folds = 3,
@@ -165,13 +164,20 @@ navigate_space = function(input,
          "classifier", call. = FALSE)
   }
 
-  if (coords_3D == TRUE){
-    coord_cols = c(coord_cols, 'coord_z')
-    message('Using 3D coordinates, please make sure that image data contains the following 3 columns: imagerow, imagecol and imagedepth')
+  if (len(coord_cols)==3){
+    coords_type = '3D'
+    message('Using 3D coordinates')
+  } else if (len(coord_cols)==2) {
+    coords_type = '2D'
+    message('Using 2D coordinates')
   } else {
-    message('Using 2D coordinates, please make sure that image data contains the following 2 columns:, imagerow and imagecol')
+    stop('Please ensure that the coord_cols parameter contains 2 or 3 elements')
   }
-  
+
+  if (!all(coord_cols %in% colnames(input@images$slice1@coordinates))){
+    stop('Please ensure that the input@images$slice1@coordinates or the given coords contain the columns specified in coord_cols')
+  }
+
   # extract cell types and label from metadata
   if ("Seurat" %in% class(input)) {
     # confirm Seurat is installed
@@ -184,25 +190,13 @@ navigate_space = function(input,
       droplevels()
     labels = meta[[label_col]]
     expr = Seurat::GetAssayData(input)
-    if (coords_3D == TRUE){
-      coords = input@images$slice1@coordinates %>%
-      dplyr::rename(coord_x = imagecol, coord_y = imagerow, coord_z= imagedepth) %>%
-      dplyr::select(coord_x, coord_y, coord_z) %>%
-      # we need to group by here
-      mutate(label = labels,
-             barcode = colnames(input),
-             idx = row_number())
+    coords = input@images$slice1@coordinates %>%
+    dplyr::select(all_of(coord_cols)) %>%
+    # we need to group by here
+    mutate(label = labels,
+           barcode = colnames(input),
+           idx = row_number())
     # print default assay
-    } else {
-      coords = input@images$slice1@coordinates %>%
-      dplyr::rename(coord_x = imagecol, coord_y = imagerow) %>%
-      dplyr::select(coord_x, coord_y) %>%
-      # we need to group by here
-      mutate(label = labels,
-             barcode = colnames(input),
-             idx = row_number())
-    # print default assay
-    }
     default_assay = Seurat::DefaultAssay(input)
     message("using default assay: ", default_assay, " ...")
   } else {
