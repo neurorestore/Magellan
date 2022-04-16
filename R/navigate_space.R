@@ -350,7 +350,7 @@ navigate_space = function(input,
   # get the nearest neighbors based on spatial coordinates
   nn = coords %>%
     dplyr::select(all_of(coord_cols)) %>%
-    nn2(k = args$k) %>%
+    nn2(k = args$k + 1) %>%
     extract("nn.idx") %>%
     as.data.frame() %>%
     mutate(idx = row_number()) %>%
