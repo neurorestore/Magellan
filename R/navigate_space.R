@@ -86,6 +86,8 @@
 #'       defaults to \code{"auto"}, which uses \link[glmnet]{cv.glmnet} to set
 #'       the penalty}
 #'   }
+#' @param nn_radius the number of nearest-neighbors to find, across the entire
+#'   dataset, for each barcode using \link[RANN]{nn2}
 #'
 #' @return a list of class \code{"Magellan"}, containing the following items:
 #' \enumerate{
@@ -144,7 +146,9 @@ navigate_space = function(input,
                                            min_n = NULL,
                                            importance = 'accuracy'),
                           # logistic regression parameters
-                          lr_params = list(mixture = 1, penalty = 'auto')
+                          lr_params = list(mixture = 1, penalty = 'auto'),
+                          # number of nearest-neighbors to search for
+                          nn_radius = k * 10
 ) {
   # check arguments
   classifier = match.arg(classifier)
@@ -350,7 +354,7 @@ navigate_space = function(input,
   # get the nearest neighbors based on spatial coordinates
   nn = coords %>%
     dplyr::select(all_of(coord_cols)) %>%
-    nn2(k = args$k + 1) %>%
+    nn2(k = nn_radius) %>%
     extract("nn.idx") %>%
     as.data.frame() %>%
     mutate(idx = row_number()) %>%
